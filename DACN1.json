@@ -1,0 +1,546 @@
+{
+  "name": "DACN1",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "- Đây là câu hỏi của người dùng : {{ $json.body.req }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a helpful assistant,\n- Bạn là chuyên gia môi giới nhà đất tại TP.HCM. thân thiện vui vè và hòa đồng...\n- Nếu câu hỏi của người dùng chứa các từ như: \"giá\", \"bao nhiêu\", \"quận\", \"TP.HCM\", \"Bình Thạnh\", \"Thủ Đức\", \"nhà\", \"mua\", \"bán\", ... thì hãy gọi tool để lấy danh sách nhà phù hợp.\n\n- có gạch đầu dòng đầy đủ và icon Khi nhận dữ liệu MongoDB:\n\n- **hiển thị ra khoảng 10 căn nhà gần với số tiền mà khác hàng mong muốn**, hiển thị thông tin , không hiển thị ra id căn nhà trong csdl, và cách 1 dòng từng căn có dấu \"-\" từng cái\n\n\n- Nếu câu hỏi không liên quan bất động sản,chung cư, tư vấn thì hãy trả lời:\n\"🏠 Vui lòng đặt câu hỏi về nhà đất để tôi có thể hỗ trợ bạn tốt hơn!\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        360,
+        0
+      ],
+      "id": "0253f939-7374-412a-b83a-00bd09bc835f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dacn",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        60,
+        0
+      ],
+      "id": "8b08bfe8-0499-4699-a696-005190ed20f1",
+      "name": "Webhook",
+      "webhookId": "cb4aa556-e20c-43b2-9a5e-3c7b29106394"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "id": "8fdc1f01-f5b5-4a25-80ec-4f859fa45ea0",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output || \"\";\n\n// Loại bỏ các dấu ** (markdown bold), * (markdown list), vv\nconst cleaned = raw\n  .replace(/\\*\\*/g, \"\")  // bỏ **bold**\n  .replace(/\\*/g, \"\")    // bỏ * list item\n  .replace(/\\\\n/g, \"\\n\"); // hiển thị xuống dòng thật\n\nreturn [\n  {\n    json: {\n       output: JSON.stringify(cleaned)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        0
+      ],
+      "id": "159e5b4c-da56-4582-b6b8-da49d8cfd869",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        280,
+        200
+      ],
+      "id": "67021bef-94a9-4130-a743-508ab46e08ec",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3oxfIJgKxRdY9Npp",
+          "name": "DACN1_API_KEY_dat"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "53123"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        420,
+        200
+      ],
+      "id": "439f2333-3c8b-42f4-81b5-055880ba6047",
+      "name": "Simple Memory",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "description": "Luôn truy vấn cơ sở dữ liệu này để lấy dữ liệu nhà đất trong cơ sở dữ liệu này",
+        "workflowId": {
+          "__rl": true,
+          "value": "4iw0gSax4pnNm7UQ",
+          "mode": "list",
+          "cachedResultName": "sub_DACN1"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        200
+      ],
+      "id": "52b1e284-2518-4d3e-b327-cf49bb907766",
+      "name": "Call n8n Workflow Tool"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "checkturn",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        620
+      ],
+      "id": "d8a4287b-256f-4494-8721-4540f1b7e0df",
+      "name": "Webhook1",
+      "webhookId": "820a2f1d-609b-4771-881c-3a01264180c5"
+    },
+    {
+      "parameters": {
+        "collection": "users",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        180,
+        520
+      ],
+      "id": "63a74fcd-8abd-459d-b191-ef1b91e6de62",
+      "name": "MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "QslTLvGrfVD0b4WO",
+          "name": "DACN1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fd7d0c3f-1356-4099-98ff-1b85a9b3fcf8",
+              "leftValue": "={{ $json.turn }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        380,
+        520
+      ],
+      "id": "13d87526-c5ed-451e-8d6f-b31c722a5437",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('MongoDB').item.json.email }}",
+        "subject": "Thông báo!!!",
+        "message": "=<!DOCTYPE html>\n<html lang=\"vi\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <title>Thông báo đăng bài</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; color: #333;\">\n  <p>Xin chào <strong>{{ $('MongoDB').item.json.name }}</strong>,</p>\n\n  <p>\n    Hiện tại lượt sử dụng đăng bài miễn phí của bạn trên ứng dụng rao bán nhà đất của chúng tôi đã hết.<br />\n    Để tiếp tục sử dụng hay đăng ký với chi phí siêu rẻ.\n  </p>\n\n  <p><em>Cảm ơn bạn đã đọc tin nhắn</em></p>\n  <p><em>Chúc bạn 1 ngày thật vui vẻ</em></p>\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        620,
+        500
+      ],
+      "id": "fd820afe-1776-42fe-814e-43b15ca6abcf",
+      "name": "Gmail",
+      "webhookId": "2725d88e-8c72-4faf-8839-f2c8f2bdc95e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "c0Bl8aCKAVdrN3Cz",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -40,
+        440
+      ],
+      "id": "73664fba-ac48-42bc-bf31-974bcccc315d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        800
+      ],
+      "id": "f4b85d20-cb9b-4b45-b0f2-ea66d11bcaa9",
+      "name": "Webhook2",
+      "webhookId": "a940facb-5337-4a03-b89a-d007ca6f5352"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.body.req }}",
+        "subject": "Thư cảm ơn -.-",
+        "message": "=<!DOCTYPE html>\n<html lang=\"vi\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <title>Thông báo đăng bài</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; color: #333;\">\n  <p>Xin chào <strong>{{ $json.body.req }}</strong>,</p>\n\n  <p>\n    Cảm ơn bạn đã tin tưởng sử dụng ứng dụng của chúng mình, chúc bạn 1 ngày thật tốt lành!!!!.\n  </p>\n\n  <p><em>Cảm ơn bạn đã đọc tin nhắn</em></p>\n  <p><em>Chúc bạn 1 ngày thật vui vẻ</em></p>\n</body>\n</html>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        220,
+        800
+      ],
+      "id": "0c019e54-4165-4d7a-95f0-fd61ed6e7b5c",
+      "name": "Gmail1",
+      "webhookId": "2725d88e-8c72-4faf-8839-f2c8f2bdc95e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "c0Bl8aCKAVdrN3Cz",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "- Đây là câu hỏi của người dùng : {{ $json.body.req }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a helpful assistant,\nmô tả 1 ngôi nhà tầm 200 chữ\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        220,
+        1020
+      ],
+      "id": "b471c9c2-eb8d-4cf8-9839-c40df6ca8378",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "description",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        1020
+      ],
+      "id": "237a40e2-b8f8-45d5-b543-ef9f2c6259a7",
+      "name": "Webhook3",
+      "webhookId": "cb4aa556-e20c-43b2-9a5e-3c7b29106394"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        740,
+        1020
+      ],
+      "id": "43691661-4cfd-48f3-94b5-5700b958425b",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output || \"\";\n\n// Loại bỏ các dấu ** (markdown bold), * (markdown list), vv\nconst cleaned = raw\n  .replace(/\\*\\*/g, \"\")  // bỏ **bold**\n  .replace(/\\*/g, \"\")    // bỏ * list item\n  .replace(/\\\\n/g, \"\\n\"); // hiển thị xuống dòng thật\n\nreturn [\n  {\n    json: {\n       output: JSON.stringify(cleaned)\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        1020
+      ],
+      "id": "872d1b7b-7d5e-41aa-86f7-7082272577f9",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        220,
+        1200
+      ],
+      "id": "b7438dcd-c4ae-4f76-83fe-b92f2593cf7c",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3oxfIJgKxRdY9Npp",
+          "name": "DACN1_API_KEY_dat"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call n8n Workflow Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "18cc8d6c-5f50-4d53-947b-2ac5e0d07d17",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "249d6654b60c175a918f64bc4f9b8fbde6261033a3021575e83ace605e859950"
+  },
+  "id": "TqC4vXRgbzyIgPFU",
+  "tags": []
+}

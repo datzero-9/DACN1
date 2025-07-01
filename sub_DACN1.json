@@ -1,0 +1,64 @@
+{
+  "name": "sub_DACN1",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -220,
+        -60
+      ],
+      "id": "66f8b07a-57b6-4dc7-8f08-005e3c2aec93",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "collection": "items",
+        "options": {
+          "limit": 4000
+        }
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        -60
+      ],
+      "id": "f1a349af-9204-4390-8131-057ae0dd24b5",
+      "name": "MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "2qDhAYDbR9Mg5D2T",
+          "name": "DACN1_items"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6d900905-4121-4d6c-a420-b66e63228be9",
+  "meta": {
+    "instanceId": "249d6654b60c175a918f64bc4f9b8fbde6261033a3021575e83ace605e859950"
+  },
+  "id": "4iw0gSax4pnNm7UQ",
+  "tags": []
+}
