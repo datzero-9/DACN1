@@ -108,7 +108,7 @@ export default function ChatDetail() {
 
       try {
         const res = await axios.post(
-          "https://n8n.laptrinhmang3.xyz/webhook/dacn",
+          "https://34f8d4bb995b.ngrok-free.app/webhook/dacn1", //đây nè
           info
         );
 
