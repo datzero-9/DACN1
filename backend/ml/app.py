@@ -25,25 +25,24 @@ def predict():
         data = request.get_json()
         print("Received data:", data)
 
-        # Chuyển data thành DataFrame
+        
         df = pd.DataFrame([data])
 
-        # Mã hóa one-hot các cột phân loại
+      
         df_encoded = pd.get_dummies(df, columns=['Type_of_House', 'District'])
 
-        # Bổ sung cột còn thiếu
+        
         for col in columns:
             if col not in df_encoded.columns:
                 df_encoded[col] = 0
 
-        # Sắp xếp đúng thứ tự cột
+        
         df_encoded = df_encoded[columns]
 
-        # Chuẩn hóa & polynomial
+        
         scaled = scaler.transform(df_encoded)
         poly_feat = poly.transform(scaled)
 
-        # Dự đoán
         price_per_m2 = model.predict(poly_feat)[0]
 
         return jsonify({'predicted_price_per_m2': round(price_per_m2, 2)})
